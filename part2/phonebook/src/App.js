@@ -1,43 +1,68 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+import personsService from './services/persons';
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [searchValue, setSearchValue] = useState('');
 
   const personsToShow = persons.filter(person => person.name.toLowerCase().includes(searchValue.toLowerCase()));
 
+  useEffect(() => {
+    personsService
+      .getPersons()
+      .then(initialPersons => {
+        setPersons(initialPersons);
+      });
+  }, []);
+
   const handlePersonSubmit = (event) => {
     event.preventDefault();
 
-    if (isNameInPersons()) {
-      const alertMessage = `${newName} is already added to phonebook`;
+    const matchingPerson = persons.find(person => person.name.toLowerCase() === newName.toLowerCase());
 
-      alert(alertMessage);
+    if (matchingPerson) {
+      const isUpdateConfirmed = window.confirm(`${newName} is already added to the phonebook, replace the old number with a new one?`);
+
+      if (isUpdateConfirmed) {
+        matchingPerson.number = newNumber;
+
+        personsService
+          .updatePerson(matchingPerson)
+          .then(returnedPerson => {
+            setPersons(persons.map(person => person.id !== returnedPerson.id ? person : returnedPerson));
+          });
+      }
     } else {
       const newPerson = {
         name: newName,
-        number: newNumber,
-        id: persons.length + 1
+        number: newNumber
       };
 
-      setPersons(persons.concat(newPerson));
+      personsService
+        .addPerson(newPerson)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson));
+        });
     }
 
     setNewName('');
     setNewNumber('');
   }
 
-  const isNameInPersons = () => {
-    const isNameInPersons = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
+  const deletePersonById = (id) => {
+    const personToDelete = persons.find(person => person.id === id);
+    const isDeleteConfirmed = window.confirm(`Delete ${personToDelete.name}?`);
 
-    return isNameInPersons;
+    if (isDeleteConfirmed) {
+      personsService
+        .deletePerson(id)
+        .then(() => {
+          setPersons(persons.filter(person => person.id !== id));
+        });
+    }
   }
 
   const handleSearchChange = (event) => {
@@ -56,17 +81,17 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       <Filter searchValue={searchValue} handleSearchChange={handleSearchChange} />
-      
+
       <h2>add a new</h2>
-      <PersonForm 
-        handlePersonSubmit={handlePersonSubmit} 
-        newName={newName} 
-        handleNameChange={handleNameChange} 
-        newNumber={newNumber} 
+      <PersonForm
+        handlePersonSubmit={handlePersonSubmit}
+        newName={newName}
+        handleNameChange={handleNameChange}
+        newNumber={newNumber}
         handleNumberChange={handleNumberChange} />
 
       <h2>Numbers</h2>
-      <Persons persons={personsToShow} />
+      <Persons persons={personsToShow} deletePerson={deletePersonById} />
     </div>
   );
 };
@@ -85,18 +110,21 @@ const PersonForm = ({ handlePersonSubmit, newName, handleNameChange, newNumber, 
   );
 };
 
-const Persons = ({ persons }) => {
+const Persons = ({ persons, deletePerson }) => {
   return (
     <div>
       {persons.map(person =>
-        <Person key={person.id} person={person} />
+        <Person key={person.id} person={person} handleDeletePerson={() => deletePerson(person.id)} />
       )}
     </div>
   );
 };
 
-const Person = ({ person }) => (
-  <p>{person.name} {person.number}</p>
+const Person = ({ person, handleDeletePerson }) => (
+  <p>
+    {person.name} {person.number}
+    <button onClick={handleDeletePerson}>delete</button>
+  </p>
 );
 
 export default App;
