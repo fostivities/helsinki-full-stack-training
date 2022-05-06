@@ -14,12 +14,12 @@ const addPerson = (newPerson) => {
 
 const deletePerson = (id) => {
     const result = axios.delete(`${endpoint}/${id}`);
-    return result.then();
+    return result.then(response => response.data);
 }
 
 const updatePerson = (updatedPerson) => {
     const result = axios.put(`${endpoint}/${updatedPerson.id}`, updatedPerson);
-    return result.then(response => response.data);
+    return result.then();
 }
 
 export default { getPersons, addPerson, deletePerson, updatePerson };

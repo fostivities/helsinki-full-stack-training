@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import Notification from './components/Notification';
+
 import personsService from './services/persons';
 
 const App = () => {
@@ -7,6 +9,8 @@ const App = () => {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState(null);
+  const [notificationStyle, setNotificationStyle] = useState('success');
 
   const personsToShow = persons.filter(person => person.name.toLowerCase().includes(searchValue.toLowerCase()));
 
@@ -33,6 +37,12 @@ const App = () => {
           .updatePerson(matchingPerson)
           .then(returnedPerson => {
             setPersons(persons.map(person => person.id !== returnedPerson.id ? person : returnedPerson));
+            setNotificationMessage(`Updated number for ${returnedPerson.name}`);
+            setNotificationStyle('success');
+          })
+          .catch(error => {
+            setNotificationMessage(`Information of ${matchingPerson.name} has already been removed from server`);
+            setNotificationStyle('error')
           });
       }
     } else {
@@ -45,8 +55,14 @@ const App = () => {
         .addPerson(newPerson)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson));
+          setNotificationMessage(`Added ${returnedPerson.name}`);
+          setNotificationStyle('success');
         });
     }
+
+    setTimeout(() => {
+      setNotificationMessage(null);
+    }, 5000);
 
     setNewName('');
     setNewNumber('');
@@ -61,6 +77,8 @@ const App = () => {
         .deletePerson(id)
         .then(() => {
           setPersons(persons.filter(person => person.id !== id));
+          setNotificationMessage(`Deleted ${personToDelete.name}`);
+          setNotificationStyle('success');
         });
     }
   }
@@ -80,6 +98,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notificationMessage} style={notificationStyle} />
       <Filter searchValue={searchValue} handleSearchChange={handleSearchChange} />
 
       <h2>add a new</h2>
