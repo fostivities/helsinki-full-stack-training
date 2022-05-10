@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 3001;
 
-const notes = [
+let notes = [
     {
         id: 1,
         content: "HTML is easy",
@@ -23,7 +23,21 @@ const notes = [
     }
 ];
 
+const requestLogger = (request, response, next) => {
+    console.log('Method: ', request.method);
+    console.log('Path: ', request.path);
+    console.log('Body: ', request.body);
+    console.log('---');
+    next();
+}
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' });
+}
+
 app.use(express.json());
+app.use(requestLogger);
+app.use(unknownEndpoint);
 
 app.get('/', (request, response) => {
     response.send('<h1>Hello world!</h1>');
