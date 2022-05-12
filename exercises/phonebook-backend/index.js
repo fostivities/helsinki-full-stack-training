@@ -51,6 +51,16 @@ const morganFormat = morgan((tokens, req, res) => {
     return tokensList.join(' ');
 });
 
+const errorHandler = (error, request, response, next) => {
+    console.log(error);
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' });
+    }
+
+    next(error);
+};
+
 app.use(express.json());
 app.use(morganFormat);
 app.use(cors());
@@ -62,43 +72,38 @@ app.get('/api/persons', (request, response) => {
     });
 });
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const person = persons.find(person => person.id === id);
-
-    if (person) {
-        response.send(person);
-    } else {
-        response.status(404).send('Person does not exist');
-    }
+app.get('/api/persons/:id', (request, response, next) => {
+    Person
+        .findById(request.params.id)
+        .then(person => {
+            if (person) {
+                response.json(person);
+            } else {
+                response.status(404).send({ error: 'No person found' });
+            }
+        })
+        .catch(error => next(error));
 });
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    persons = persons.filter(person => person.id !== id);
+app.get('/api/info', (request, response) => {
+    const numberOfPersons = persons.length;
+    const currentDateTime = new Date();
 
-    response.status(204).end();
+    response.send(`<p>Phone book has info for ${numberOfPersons} people</p><p>${currentDateTime}</p>`);
+});
+
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person
+        .findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end();
+        })
+        .catch(error => next(error));
 });
 
 app.post('/api/persons', (request, response) => {
-    // const newId = Math.floor(Math.random() * 1000);
     const newName = request.body.name;
     const newNumber = request.body.number;
-    // const isNameInPhonebook = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
-
-    // if (!newName || !newNumber) {
-    //     return response.status(400).json({
-    //         error: 'Missing request information'
-    //     });
-    // } else if (isNameInPhonebook) {
-    //     return response.status(400).json({
-    //         error: 'Name must be unique'
-    //     });
-    // }
-
-    // persons = persons.concat(newPerson);
-
-    // response.json(newPerson);
 
     const person = new Person({
         name: newName,
@@ -110,12 +115,21 @@ app.post('/api/persons', (request, response) => {
     });
 });
 
-app.get('/api/info', (request, response) => {
-    const numberOfPersons = persons.length;
-    const currentDateTime = new Date();
+app.put('/api/persons/:id', (request, response, next) => {
+    const person = {
+        name: request.body.name,
+        number: request.body.number
+    };
 
-    response.send(`<p>Phone book has info for ${numberOfPersons} people</p><p>${currentDateTime}</p>`);
+    Person
+        .findByIdAndUpdate(request.params.id, person, { new: true })
+        .then(updatedPerson => {
+            response.json(updatedPerson);
+        })
+        .catch(error => next(error));
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server now listening on ${PORT}`);
