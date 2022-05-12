@@ -57,6 +57,11 @@ const App = () => {
           setPersons(persons.concat(returnedPerson));
           setNotificationMessage(`Added ${returnedPerson.name}`);
           setNotificationStyle('success');
+        })
+        .catch(error => {
+          setNotificationMessage(error.response.data.error);
+          setNotificationStyle('error');
+          console.log(error);
         });
     }
 
