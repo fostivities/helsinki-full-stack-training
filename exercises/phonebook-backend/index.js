@@ -1,9 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 
+const Person = require('./models/person');
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 
 let persons = [
     {
@@ -54,7 +57,9 @@ app.use(cors());
 app.use(express.static('build'));
 
 app.get('/api/persons', (request, response) => {
-    response.send(persons);
+    Person.find({}).then(results => {
+        response.send(results);
+    });
 });
 
 app.get('/api/persons/:id', (request, response) => {
@@ -76,30 +81,33 @@ app.delete('/api/persons/:id', (request, response) => {
 });
 
 app.post('/api/persons', (request, response) => {
-    const newId = Math.floor(Math.random() * 1000);
+    // const newId = Math.floor(Math.random() * 1000);
     const newName = request.body.name;
     const newNumber = request.body.number;
-    const isNameInPhonebook = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
+    // const isNameInPhonebook = persons.some(person => person.name.toLowerCase() === newName.toLowerCase());
 
-    if (!newName || !newNumber) {
-        return response.status(400).json({
-            error: 'Missing request information'
-        });
-    } else if (isNameInPhonebook) {
-        return response.status(400).json({
-            error: 'Name must be unique'
-        });
-    }
+    // if (!newName || !newNumber) {
+    //     return response.status(400).json({
+    //         error: 'Missing request information'
+    //     });
+    // } else if (isNameInPhonebook) {
+    //     return response.status(400).json({
+    //         error: 'Name must be unique'
+    //     });
+    // }
 
-    const newPerson = {
-        id: newId,
+    // persons = persons.concat(newPerson);
+
+    // response.json(newPerson);
+
+    const person = new Person({
         name: newName,
         number: newNumber
-    };
+    });
 
-    persons = persons.concat(newPerson);
-
-    response.json(newPerson);
+    person.save().then(result => {
+        response.json(result);
+    });
 });
 
 app.get('/api/info', (request, response) => {
