@@ -8,31 +8,8 @@ const Person = require('./models/person');
 const app = express();
 const PORT = process.env.PORT;
 
-let persons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    }
-];
-
-morgan.token('postFormat', (req, res) => {
-    return JSON.stringify(req.body)
+morgan.token('postFormat', (req) => {
+    return JSON.stringify(req.body);
 });
 
 const morganFormat = morgan((tokens, req, res) => {
@@ -87,17 +64,17 @@ app.get('/api/persons/:id', (request, response, next) => {
         .catch(error => next(error));
 });
 
-app.get('/api/info', (request, response) => {
-    const numberOfPersons = persons.length;
-    const currentDateTime = new Date();
+// app.get('/api/info', (request, response) => {
+//     const numberOfPersons = persons.length;
+//     const currentDateTime = new Date();
 
-    response.send(`<p>Phone book has info for ${numberOfPersons} people</p><p>${currentDateTime}</p>`);
-});
+//     response.send(`<p>Phone book has info for ${numberOfPersons} people</p><p>${currentDateTime}</p>`);
+// });
 
 app.delete('/api/persons/:id', (request, response, next) => {
     Person
         .findByIdAndRemove(request.params.id)
-        .then(result => {
+        .then(() => {
             response.status(204).end();
         })
         .catch(error => next(error));

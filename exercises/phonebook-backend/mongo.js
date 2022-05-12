@@ -40,11 +40,11 @@ if (process.argv.length === 3) {
         number: process.argv[4]
     });
 
-    person.save().then(result => {
+    person.save().then(() => {
         console.log(`added ${person.name} number ${person.number} to phonebook`);
         mongoose.connection.close();
     });
-} else { 
+} else {
     console.log('Improper number of parameters');
     console.log('For saving a person: node mongo.js <password> "<name>" <number>');
     console.log('For finding all persons: node mongo.js <password>');
