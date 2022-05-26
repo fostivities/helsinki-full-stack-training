@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+
 const logger = require('./logger');
 
 const errorHandler = (error, request, response, next) => {
@@ -12,6 +14,35 @@ const errorHandler = (error, request, response, next) => {
 	next(error);
 };
 
+const tokenExtractor = (request, response, next) => {
+	const authorization = request.get('authorization');
+	request.token = '';
+
+	if (authorization && authorization.toLowerCase().startsWith('bearer')) {
+		request.token = authorization.substring(7);
+	}
+
+	next();
+};
+
+const userExtractor = (request, response, next) => {
+	const token = request.token;
+	request.user = null;
+
+	if (token) {
+		const decodedToken = jwt.verify(token, process.env.SECRET);
+
+		request.user = {
+			username: decodedToken.username,
+			id: decodedToken.id
+		};
+	}
+
+	next();
+};
+
 module.exports = {
-	errorHandler
+	errorHandler,
+	tokenExtractor,
+	userExtractor
 };
