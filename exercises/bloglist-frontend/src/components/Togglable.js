@@ -2,14 +2,22 @@ import { useState, forwardRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 
 const Togglable = forwardRef((props, ref) => {
-	const [visible, setVisible] = useState(false);
-
-	const hideWhenVisible = { display: visible ? 'none' : '' };
-	const showWhenVisible = { display: visible ? '' : 'none' };
+	const [isVisible, setIsVisible] = useState(false);
 
 	const toggleVisibility = () => {
-		setVisible(!visible);
-	};
+		setIsVisible(!isVisible);
+	}
+
+	const displayView = () => (
+		<div>
+			{props.children}
+			<button onClick={toggleVisibility}>cancel</button>
+		</div>
+	);
+
+	const hideView = () => (
+		<button onClick={toggleVisibility}>{props.buttonLabel}</button>
+	);
 
 	useImperativeHandle(ref, () => {
 		return {
@@ -19,13 +27,10 @@ const Togglable = forwardRef((props, ref) => {
 
 	return (
 		<div>
-			<div style={hideWhenVisible}>
-				<button onClick={toggleVisibility}>{props.buttonLabel}</button>
-			</div>
-			<div style={showWhenVisible}>
-				{props.children}
-				<button onClick={toggleVisibility}>cancel</button>
-			</div>
+			{isVisible
+				? displayView()
+				: hideView()
+			}
 		</div>
 	);
 });

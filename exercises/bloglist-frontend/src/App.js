@@ -1,31 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import Blog from './components/Blog';
+import BlogForm from './components/BlogForm';
 import Notification from './components/Notification';
+import Togglable from './components/Togglable';
 
 import blogService from './services/blogs';
 import loginService from './services/login';
 
-function App() {
+const App = () => {
 	const [blogs, setBlogs] = useState([]);
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [user, setUser] = useState(null);
-	const [title, setTitle] = useState('');
-	const [author, setAuthor] = useState('');
-	const [url, setUrl] = useState('');
 	const [notificationMessage, setNotificationMessage] = useState('');
 	const [notificationStyle, setNotificationStyle] = useState('success');
 
+	const blogFormRef = useRef();
+
 	useEffect(() => {
-		blogService.getAll().then(blogs =>
-			setBlogs(blogs)
-		);
+		getBlogs();
 	}, []);
 
 	useEffect(() => {
 		const loggedBlogAppUser = window.localStorage.getItem('loggedBlogAppUser')
-		
+
 		if (loggedBlogAppUser) {
 			const user = JSON.parse(loggedBlogAppUser);
 
@@ -53,30 +52,54 @@ function App() {
 		}
 	}
 
-	const handleLogout = (event) => {
+	const handleLogout = () => {
 		window.localStorage.removeItem('loggedBlogAppUser');
 		setUser(null);
 		displayNotification('successfully logged out', 'success');
 	}
 
-	const handleCreateBlog = async (event) => {
-		event.preventDefault();
+	const getBlogs = async () => {
+		try {
+			let blogsRetrieved = await blogService.getAll();
+
+			blogsRetrieved = blogsRetrieved.sort((blogA, blogB) => blogB.likes - blogA.likes);
+
+			setBlogs(blogsRetrieved);
+		} catch (err) {
+			displayNotification('unable to get blogs', 'error');
+		}
+	}
+
+	const createBlog = async (newBlog) => {
+		blogFormRef.current.toggleVisibility();
 
 		try {
-			const newBlog = {
-				title,
-				author,
-				url
-			};
 			const createdBlog = await blogService.createBlog(newBlog);
 
 			setBlogs(blogs.concat(createdBlog));
-			setTitle('');
-			setAuthor('');
-			setUrl('');
 			displayNotification(`a new blog ${createdBlog.title} by ${createdBlog.author} added`, 'success');
 		} catch (err) {
 			displayNotification('unauthorized', 'error');
+		}
+	}
+
+	const updateBlog = async (blogToUpdate) => {
+		try {
+			const updatedBlog = await blogService.updateBlog(blogToUpdate);
+
+			setBlogs(blogs.map(blog => blog.id === updatedBlog.id ? updatedBlog : blog));
+		} catch (err) {
+			displayNotification('unable to update blog', 'error');
+		}
+	}
+
+	const deleteBlog = async (blogIdToDelete) => {
+		try {
+			await blogService.deleteBlog(blogIdToDelete);
+
+			setBlogs(blogs.filter(blog => blog.id !== blogIdToDelete));
+		} catch (err) {
+			displayNotification('unable to delete blog', 'error');
 		}
 	}
 
@@ -94,6 +117,7 @@ function App() {
 		<div>
 			<h2>log in to application</h2>
 			<Notification message={notificationMessage} style={notificationStyle} />
+
 			<form onSubmit={handleLogin}>
 				<div>
 					username
@@ -105,8 +129,8 @@ function App() {
 				</div>
 				<button type="submit">Submit</button>
 			</form>
-		</div>
-	)
+		</div >
+	);
 
 	const blogList = () => (
 		<div>
@@ -117,34 +141,15 @@ function App() {
 				<button onClick={handleLogout}>logout</button>
 			</p>
 
-			{blogForm()}
+			<Togglable buttonLabel="new blog" ref={blogFormRef}>
+				<BlogForm createBlog={createBlog} />
+			</Togglable>
 
 			{blogs.map(blog =>
-				<Blog key={blog.id} blog={blog} />
+				<Blog key={blog.id} blog={blog} username={user.username} updateBlog={updateBlog} deleteBlog={deleteBlog} />
 			)}
 		</div>
-	)
-
-	const blogForm = () => (
-		<div>
-			<h2>create new</h2>
-			<form onSubmit={handleCreateBlog}>
-				<div>
-					title:
-					<input type="text" value={title} name="Title" onChange={({ target }) => setTitle(target.value)} />
-				</div>
-				<div>
-					author:
-					<input type="text" value={author} name="Author" onChange={({ target }) => setAuthor(target.value)} />
-				</div>
-				<div>
-					url:
-					<input type="text" value={url} name="Url" onChange={({ target }) => setUrl(target.value)} />
-				</div>
-				<button type="submit">Submit</button>
-			</form>
-		</div>
-	)
+	);
 
 	return (
 		<div>
