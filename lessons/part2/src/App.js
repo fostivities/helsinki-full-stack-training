@@ -103,7 +103,7 @@ const App = () => {
 		if (user) {
 			return (
 				<div>
-					<p>{user.name} logged-in</p>
+					<p>{user.name} logged in</p>
 					<Togglable buttonLabel="new note" ref={noteFormRef}>
 						<NoteForm createNote={addNote} />
 					</Togglable>
@@ -111,7 +111,7 @@ const App = () => {
 			);
 		} else {
 			return (
-				<Togglable buttonLabel="log in">
+				<Togglable buttonLabel="login">
 					<LoginForm
 						handleSubmit={handleLogin}
 						handleUsernameChange={handleUsernameChange}
