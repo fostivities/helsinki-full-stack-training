@@ -43,7 +43,7 @@ const Blog = ({ blog, username, updateBlog, deleteBlog }) => {
 	const displayRemoveButton = () => {
 		if (blog.user && blog.user.username === username) {
 			return (
-				<button onClick={removeBlog}>remove</button>
+				<button className="remove-blog-button" onClick={removeBlog}>remove</button>
 			);
 		}
 	};
