@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node index.js",
-	"start:test": "cross-env NODE_ENV=test node index.js",
+    "start:test": "cross-env NODE_ENV=test node index.js",
     "dev": "cross-env NODE_ENV=development nodemon index.js",
-	"dev:test": "cross-env NODE_ENV=test nodemon index.js",
+    "dev:test": "cross-env NODE_ENV=test nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
     "test-int": "npm test -- tests/blog_api.test.js"
   },
@@ -21,7 +21,8 @@
     "express": "^4.18.1",
     "express-async-errors": "^3.1.1",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.3.3"
+    "mongoose": "^6.3.3",
+    "redux": "^4.2.0"
   },
   "devDependencies": {
     "jest": "^28.1.0",
